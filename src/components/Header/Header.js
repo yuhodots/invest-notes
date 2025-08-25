@@ -32,10 +32,10 @@ const Header = ({ siteTitle, siteDescription, type }) => {
                 </h1>
                 <ul>
                     <li>
-                        <a href={currentLang === "kor" ? "/kor" : "/eng"}>Home</a>
+                        <Link to={currentLang === "kor" ? "/kor" : "/eng"}>Home</Link>
                     </li>
                     <li>
-                        <a href={currentLang === "kor" ? "/kor/category" : "/eng/category"}>Category</a>
+                        <Link to={currentLang === "kor" ? "/kor/category" : "/eng/category"}>Category</Link>
                     </li>
                     <li>
                         <button
@@ -56,11 +56,11 @@ const Header = ({ siteTitle, siteDescription, type }) => {
                         </button>
                     </li>
                     <li>
-                        <a href={currentLang === "kor" ? "/kor/about" : "/eng/about"}>About</a>
+                        <Link to={currentLang === "kor" ? "/kor/about" : "/eng/about"}>About</Link>
                     </li>
                     <li style={{ marginLeft: '20px' }}>
-                        <a 
-                            href={currentLang === "kor" ? "/eng" : "/"}
+                        <Link 
+                            to={currentLang === "kor" ? "/eng" : "/"}
                             style={{
                                 display: 'inline-block',
                                 padding: '1px 8px',
@@ -75,7 +75,7 @@ const Header = ({ siteTitle, siteDescription, type }) => {
                             }}
                         >
                             {currentLang === "kor" ? "ENG" : "KOR"}
-                        </a>
+                        </Link>
                     </li>
                 </ul>
             </div>

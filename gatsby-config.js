@@ -3,12 +3,12 @@ const siteMetadata = {
     description: "",
     author: "@yuhodots",
     disqusShortname: "yuhodots",
-    url: "https://yuhodots.github.io/invest",
-    siteUrl: "https://yuhodots.github.io/invest"
+    url: "https://yuhodots.github.io/invest-notes",
+    siteUrl: "https://yuhodots.github.io/invest-notes"
 };
 
 module.exports = {
-    pathPrefix: "/invest",
+    pathPrefix: "/invest-notes",
     siteMetadata,
     plugins: [
         "gatsby-plugin-react-helmet",
