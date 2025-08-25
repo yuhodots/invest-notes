@@ -11,7 +11,8 @@ const Header = ({ siteTitle, siteDescription, type }) => {
     const getCurrentLanguage = () => {
         if (typeof window !== "undefined") {
             const path = window.location.pathname;
-            if (path.startsWith("/eng")) return "eng";
+            // pathPrefix를 고려한 언어 감지
+            if (path.includes("/eng")) return "eng";
             return "kor"; // 기본값은 한국어
         }
         return "kor";
