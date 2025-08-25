@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(brew install:*)",
+      "Bash(rm:*)",
+      "Bash(npm install:*)",
+      "Bash(yarn install)",
+      "Bash(mkdir:*)",
+      "Bash(yarn remove:*)",
+      "Bash(yarn add:*)",
+      "Bash(gatsby develop)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

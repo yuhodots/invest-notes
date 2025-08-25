@@ -1,0 +1,86 @@
+@import "../../../stylesheets/variables";
+header {
+    text-align: center;
+    background: linear-gradient(135deg, #1a252f 0%, #34495e 50%, #1a252f 100%);
+    height: 70px;
+    z-index: 1;
+    .header-inner {
+        color: var(--default-header);
+        margin: 0 auto;
+        padding: 15px 20px;
+        max-width: $app-max-width;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        ul {
+            display: flex;
+            align-items: center;
+            position: relative;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            white-space: nowrap;
+            flex-shrink: 0;
+            li {
+                display: inline-flex;
+                margin-bottom: 0;
+                &+li {
+                    margin-left: 12px;
+                }
+                a {
+                    opacity: 1;
+                    &:hover {
+                        opacity: 0.7;
+                    }
+                    @media all and (min-width: 768px) {}
+                }
+            }
+        }
+    }
+    h1 {
+        margin-bottom: 0px;
+        font-size: 1.4rem;
+        letter-spacing: -1px;
+        cursor: default;
+    }
+    .description {
+        font-size: 15px;
+        letter-spacing: -0.5px;
+        cursor: default;
+    }
+}
+
+
+/* Mobile Device */
+
+@media all and (max-width: 768px) {
+    header:not(.simple) {
+        padding: $app-mobile-padding;
+    }
+    header.simple {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        height: $simple-header-height;
+        background: linear-gradient(135deg, #1a252f 0%, #34495e 50%, #1a252f 100%);
+        .header-inner {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            ul {
+                margin-top: 0;
+            }
+        }
+        h1 {
+            font-size: 25px;
+            height: fit-content;
+            margin: 0;
+        }
+        .description {
+            display: none;
+        }
+    }
+}

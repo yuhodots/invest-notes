@@ -1,0 +1,29 @@
+
+.post-info {
+    font-family: 'Montserrat', sans-serif;
+    margin-bottom: 3px;
+    .date {
+        font-size: 12px;
+    }
+    .category {
+        font-size: 12px;
+        color: var(--post-info-category-bg);
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .middle {
+        display: inline-block;
+        width: 1px;
+        height: 9px;
+        margin: 0 8px;
+        background-color: #AAAAAA;
+    }
+}
+
+.other-post-type {
+    font-size: 14px;
+    border-left: 3px solid black;
+    padding-left: 10px;
+    font-weight: 300;
+    letter-spacing: -0.3px;
+}
