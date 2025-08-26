@@ -1,0 +1,136 @@
+name: Auto Content Generator
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  generate-content:
+    if: contains(github.event.issue.labels.*.name, 'content-request')
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+    
+    - name: Install dependencies
+      run: |
+        cd ai_workflows
+        uv sync --locked
+    
+    - name: Extract issue information
+      id: issue-info
+      run: |
+        echo "ISSUE_TITLE=${{ github.event.issue.title }}" >> $GITHUB_ENV
+        echo "ISSUE_BODY=${{ github.event.issue.body }}" >> $GITHUB_ENV
+        echo "ISSUE_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
+        
+        # Create slug from issue title
+        SLUG=$(echo "${{ github.event.issue.title }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9가-힣]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')
+        echo "SLUG=$SLUG" >> $GITHUB_ENV
+        
+        # Get current date
+        DATE=$(date +%Y-%m-%d)
+        echo "DATE=$DATE" >> $GITHUB_ENV
+    
+    - name: Generate Korean content
+      run: |
+        cd ai_workflows
+        uv run python writer.py \
+          --title "${{ env.ISSUE_TITLE }}" \
+          --body "${{ env.ISSUE_BODY }}" \
+          --output "../contents/kor/${{ env.DATE }}-${{ env.SLUG }}.md" \
+          --language "korean"
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    
+    - name: Generate English content
+      run: |
+        cd ai_workflows
+        uv run python translator.py \
+          --input "../contents/kor/${{ env.DATE }}-${{ env.SLUG }}.md" \
+          --output "../contents/eng/${{ env.DATE }}-${{ env.SLUG }}.md"
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: |
+          feat: auto-generated content for issue #${{ env.ISSUE_NUMBER }}
+          
+          - Generated Korean content: ${{ env.DATE }}-${{ env.SLUG }}.md
+          - Generated English content: ${{ env.DATE }}-${{ env.SLUG }}.md
+          
+          Based on issue: ${{ env.ISSUE_TITLE }}
+        title: "Auto-generated content: ${{ env.ISSUE_TITLE }}"
+        body: |
+          ## 자동 생성된 컨텐츠
+          
+          이 PR은 이슈 #${{ env.ISSUE_NUMBER }}에 대한 응답으로 AI가 자동 생성한 컨텐츠입니다.
+          
+          ### 생성된 파일들:
+          - 📝 한국어: `contents/kor/${{ env.DATE }}-${{ env.SLUG }}.md`
+          - 📝 영어: `contents/eng/${{ env.DATE }}-${{ env.SLUG }}.md`
+          
+          ### 원본 이슈:
+          **제목:** ${{ env.ISSUE_TITLE }}
+          
+          **링크:** #${{ env.ISSUE_NUMBER }}
+          
+          ---
+          
+          ✅ 검토 후 머지해주세요.
+          ❌ 문제가 있다면 이슈를 닫고 다시 시도해주세요.
+        branch: auto-content/${{ env.ISSUE_NUMBER }}-${{ env.SLUG }}
+        labels: |
+          auto-generated
+          content
+        reviewers: |
+          ${{ github.event.issue.user.login }}
+    
+    - name: Add comment to issue
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `🤖 **컨텐츠 생성 완료!**
+            
+            귀하의 요청에 따라 AI가 컨텐츠를 생성했습니다.
+            
+            📋 **생성된 파일들:**
+            - 한국어: \`contents/kor/${{ env.DATE }}-${{ env.SLUG }}.md\`
+            - 영어: \`contents/eng/${{ env.DATE }}-${{ env.SLUG }}.md\`
+            
+            🔍 **다음 단계:**
+            PR을 확인하고 검토해주세요. 문제가 없으면 머지하시면 됩니다.
+            
+            ✨ 생성된 PR: [Auto-generated content: ${{ env.ISSUE_TITLE }}]`
+          })
+    
+    - name: Add labels to issue
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.addLabels({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: ['auto-processed', 'completed']
+          })

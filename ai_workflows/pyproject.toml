@@ -3,4 +3,9 @@ name = "ai-workflows"
 version = "0.1.0"
 description = "AI workflows for invest-notes blog"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "frontmatter>=3.0.8",
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "python-frontmatter>=1.0.0",
+]

@@ -1,0 +1,37 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "writer",
+      "type": "debugpy",
+      "program": "${workspaceFolder}/ai_workflows/writer.py",
+      "args": [
+        "--title",
+        "금리 인하 시 주식 주가에 대한 영향",
+        "--body",
+        "상세한 분석이 필요합니다",
+        "--output",
+        "contents/kor/2024-01-01-interest-rate-effect.md"
+      ],
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/ai_workflows/.venv/bin/python",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "translator",
+      "type": "debugpy",
+      "program": "${workspaceFolder}/ai_workflows/translator.py",
+        "args": [
+            "--input",
+            "contents/kor/2024-01-01-interest-rate-effect.md",
+            "--output",
+            "contents/eng/2024-01-01-interest-rate-effect.md"
+        ],
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/ai_workflows/.venv/bin/python",
+      "console": "integratedTerminal"
+    }
+  ]
+}
