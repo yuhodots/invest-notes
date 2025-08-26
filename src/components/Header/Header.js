@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "gatsby";
 
 import "./Header.scss";
 
 const Header = ({ siteTitle, siteDescription, type }) => {
     const isMain = type === "main";
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     console.log(type);
     
     // 현재 경로에서 언어 감지
@@ -24,6 +25,10 @@ const Header = ({ siteTitle, siteDescription, type }) => {
     const handleDashboardClick = () => {
         alert("해당 기능은 현재 개발중입니다");
     };
+
+    const toggleMenu = () => {
+        setIsMenuOpen(!isMenuOpen);
+    };
     
     return (
         <header className={!isMain ? "simple" : null}>
@@ -31,7 +36,9 @@ const Header = ({ siteTitle, siteDescription, type }) => {
                 <h1>
                     <Link to="/">{siteTitle}</Link>
                 </h1>
-                <ul>
+                
+                {/* 데스크톱 메뉴 */}
+                <ul className="desktop-menu">
                     <li>
                         <Link to={currentLang === "kor" ? "/kor" : "/eng"}>Home</Link>
                     </li>
@@ -62,23 +69,61 @@ const Header = ({ siteTitle, siteDescription, type }) => {
                     <li style={{ marginLeft: '20px' }}>
                         <Link 
                             to={currentLang === "kor" ? "/eng" : "/"}
-                            style={{
-                                display: 'inline-block',
-                                padding: '1px 8px',
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                color: 'rgba(255, 255, 255, 0.9)',
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                textDecoration: 'none',
-                                borderRadius: '12px',
-                                letterSpacing: '0.5px',
-                                border: '1px solid rgba(255, 255, 255, 0.15)'
-                            }}
+                            className="lang-switch"
                         >
-                            {currentLang === "kor" ? "ENG" : "KOR"}
+                            <span className={`lang-text ${currentLang === "kor" ? "active" : ""}`}>KOR</span>
+                            <span className="lang-divider">/</span>
+                            <span className={`lang-text ${currentLang === "eng" ? "active" : ""}`}>ENG</span>
                         </Link>
                     </li>
                 </ul>
+
+                {/* 모바일 햄버거 버튼 */}
+                <button className="mobile-menu-btn" onClick={toggleMenu}>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+                {/* 모바일 메뉴 */}
+                <div className={`mobile-menu ${isMenuOpen ? 'open' : ''}`}>
+                    <ul>
+                        <li>
+                            <Link to={currentLang === "kor" ? "/kor" : "/eng"} onClick={() => setIsMenuOpen(false)}>Home</Link>
+                        </li>
+                        <li>
+                            <Link to={currentLang === "kor" ? "/kor/category" : "/eng/category"} onClick={() => setIsMenuOpen(false)}>Category</Link>
+                        </li>
+                        <li>
+                            <button
+                                onClick={() => {
+                                    handleDashboardClick();
+                                    setIsMenuOpen(false);
+                                }}
+                                className="mobile-dashboard-btn"
+                            >
+                                Dashboard
+                            </button>
+                        </li>
+                        <li>
+                            <Link to={currentLang === "kor" ? "/kor/about" : "/eng/about"} onClick={() => setIsMenuOpen(false)}>About</Link>
+                        </li>
+                        <li>
+                            <Link 
+                                to={currentLang === "kor" ? "/eng" : "/"}
+                                onClick={() => setIsMenuOpen(false)}
+                                className="mobile-lang-switch"
+                            >
+                                <span className={`lang-text ${currentLang === "kor" ? "active" : ""}`}>KOR</span>
+                                <span className="lang-divider">/</span>
+                                <span className={`lang-text ${currentLang === "eng" ? "active" : ""}`}>ENG</span>
+                            </Link>
+                        </li>
+                    </ul>
+                </div>
+
+                {/* 모바일 메뉴 오버레이 */}
+                {isMenuOpen && <div className="mobile-menu-overlay" onClick={() => setIsMenuOpen(false)}></div>}
             </div>
         </header>
     );
