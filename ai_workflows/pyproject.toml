@@ -1,0 +1,6 @@
+[project]
+name = "ai-workflows"
+version = "0.1.0"
+description = "AI workflows for invest-notes blog"
+requires-python = ">=3.12"
+dependencies = []
