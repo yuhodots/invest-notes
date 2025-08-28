@@ -4,3 +4,6 @@ node_modules/
 public/
 package-lock.json
 .obsidian
+__pycache__/
+*.pyc
+

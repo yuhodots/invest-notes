@@ -9,14 +9,10 @@ const Category = ({ categories, posts, language = "kor" }) => {
         sortedCategories[0]
     );
 
-    const upperCategory = language === "eng" ? {
+    const upperCategory = {
         'Strategy': ['Indicators', 'Strategy', 'Chart'],
         'Economy': ['Economics', 'Stock Analysis'],
         'News': ['Daily News'],
-    } : {
-        'Strategy': ['투자지표', '매매전략', '차트분석'],
-        'Economy': ['경제지식', '종목분석'],
-        'News': ['데일리뉴스'],
     }
     return (
         <div className="category">

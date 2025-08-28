@@ -10,83 +10,100 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
-import frontmatter
+import yaml
 from openai import OpenAI
 
 from prompts.writer_system_prompt import WRITER_SYSTEM_PROMPT
-from prompts.writer_prompt_template import WRITER_PROMPT_TEMPLATE
+from prompts.writer_prompt_template import (
+    WRITER_PROMPT_TEMPLATE,
+    CATEGORY_SELECTION_PROMPT,
+)
 
 
-class ContentWriter:
-    def __init__(self, api_key: Optional[str] = None):
-        """Initialize the content writer with OpenAI client"""
-        self.client = OpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
-        if not self.client.api_key:
-            raise ValueError("OpenAI API key is required")
+def request_openai_api(prompt: str, system_prompt: str, model="gpt-5") -> str:
+    """Request content generation from OpenAI API"""
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    if not client.api_key:
+        raise ValueError("OpenAI API key is required")
 
-    def generate_content(self, title: str, body: str = "") -> str:
-        """Generate blog content using OpenAI API"""
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=1,
+            max_completion_tokens=10000,
+        )
 
-        try:
-            response = self.client.chat.completions.create(
-                model="gpt-5",
-                messages=[
-                    {"role": "system", "content": WRITER_SYSTEM_PROMPT},
-                    {
-                        "role": "user",
-                        "content": WRITER_PROMPT_TEMPLATE.format(
-                            title=title, body=body
-                        ),
-                    },
-                ],
-                temperature=0.7,
-                max_tokens=15000,
-            )
+        return response.choices[0].message.content.strip()
 
-            return response.choices[0].message.content.strip()
+    except Exception as e:
+        raise RuntimeError(f"Failed to generate content: {str(e)}")
 
-        except Exception as e:
-            raise RuntimeError(f"Failed to generate content: {str(e)}")
 
-    def create_markdown_post(
-        self, title: str, content: str, output_path: str, tags: list = None
-    ) -> None:
-        """Create a markdown file with frontmatter"""
+def create_markdown_post(
+    title: str,
+    content: str,
+) -> None:
+    """Create a markdown file with frontmatter"""
 
-        # Create frontmatter metadata
-        post = frontmatter.Post(content)
-        post.metadata = {
-            "title": title,
-            "date": datetime.now().strftime("%Y-%m-%d"),
-            "category": "투자",
-            "tags": tags or ["투자", "경제", "금융"],
-            "description": self._extract_description(content),
-            "author": "AI Writer",
-            "auto_generated": True,
-        }
+    # Create frontmatter metadata
+    selected_category = request_openai_api(
+        CATEGORY_SELECTION_PROMPT.format(title=title),
+        system_prompt="You are an expert in categorizing investment blog topics.",
+        model="gpt-5-mini",
+    )
+    selected_category = selected_category.strip().lower()
+    if selected_category in ["indicators", "strategy", "chart"]:
+        upper_category = "Strategy"
+    elif selected_category in ["economics", "stock analysis"]:
+        upper_category = "Economy"
+    elif selected_category == "daily news":
+        upper_category = "News"
+    else:
+        raise ValueError(f"Unknown category selected: {selected_category}")
+    selected_category = selected_category.title()
 
-        # Ensure output directory exists
-        output_file = Path(output_path)
-        output_file.parent.mkdir(parents=True, exist_ok=True)
+    metadata = {
+        "title": title,
+        "date": datetime.now().strftime("%Y-%m-%d"),
+        "template": "post",
+        "draft": False,
+        "path": f"/{datetime.now().strftime('%y-%m-%d-%s')}/",
+        "description": _extract_description(content),
+        "category": selected_category,
+    }
 
-        # Write the markdown file
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write(frontmatter.dumps(post))
+    # Ensure output directory exists
+    output_path = (
+        f"contents/kor/{upper_category}/{datetime.now().strftime('%Y-%m-%d')}-{title}.md"
+    )
+    output_file = Path(output_path)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
 
-        print(f"✅ Korean content generated: {output_path}")
+    # Write the markdown file with YAML frontmatter
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write("---\n")
+        f.write(yaml.dump(metadata, allow_unicode=True, default_flow_style=False))
+        f.write("---\n\n")
+        f.write(content)
 
-    def _extract_description(self, content: str) -> str:
-        """Extract a brief description from content"""
-        lines = content.split("\n")
-        for line in lines:
-            line = line.strip()
-            if line and not line.startswith("#") and len(line) > 50:
-                # Take first meaningful paragraph, limit to 150 chars
-                return (line[:150] + "...") if len(line) > 150 else line
+    print(f"✅ Korean content generated: {output_path}")
 
-        return "투자와 경제에 대한 전문적인 분석과 인사이트를 제공합니다."
+
+def _extract_description(content: str) -> str:
+    """Extract a brief description from content"""
+    lines = content.split("\n")
+    for line in lines:
+        line = line.strip()
+        if line and not line.startswith("#") and len(line) > 50:
+            # Take first meaningful paragraph, limit to 150 chars
+            return (line[:175] + "...") if len(line) > 175 else line
+
+    raise ValueError("Failed to extract description from content")
 
 
 def main():
@@ -95,27 +112,22 @@ def main():
     )
     parser.add_argument("--title", required=True, help="Issue title")
     parser.add_argument("--body", default="", help="Issue body content")
-    parser.add_argument("--output", required=True, help="Output markdown file path")
     parser.add_argument("--language", default="korean", help="Content language")
-    parser.add_argument("--tags", nargs="*", help="Blog post tags")
 
     args = parser.parse_args()
 
     try:
-        # Initialize writer
-        writer = ContentWriter()
-
         # Generate content
         print(f"🔄 Generating content for: {args.title}")
-        content = writer.generate_content(args.title, args.body)
+        content = request_openai_api(
+            prompt=WRITER_PROMPT_TEMPLATE.format(title=args.title, body=args.body),
+            system_prompt=WRITER_SYSTEM_PROMPT,
+        )
 
         # Create markdown file
-        writer.create_markdown_post(
+        create_markdown_post(
             title=args.title,
             content=content,
-            output_path=args.output,
-            yyyy_mm_dd=datetime.now().strftime("%Y-%m-%d"),
-            tags=args.tags,
         )
 
         print("✨ Content generation completed successfully!")

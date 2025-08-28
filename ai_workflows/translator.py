@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-import frontmatter
+import yaml
 from openai import OpenAI
 
 from prompts.translator_system_prompt import TRANSLATOR_SYSTEM_PROMPT
@@ -28,9 +28,17 @@ class ContentTranslator:
     def load_markdown_post(self, file_path: str) -> tuple[dict, str]:
         """Load markdown file with frontmatter"""
         with open(file_path, "r", encoding="utf-8") as f:
-            post = frontmatter.load(f)
+            content = f.read()
 
-        return post.metadata, post.content
+        # Parse YAML frontmatter manually
+        if content.startswith("---\n"):
+            parts = content.split("---\n", 2)
+            if len(parts) >= 3:
+                metadata = yaml.safe_load(parts[1])
+                content = parts[2].strip()
+                return metadata, content
+
+        return {}, content
 
     def translate_content(self, korean_content: str, title: str) -> str:
         """Translate Korean content to English using OpenAI API"""
@@ -95,49 +103,28 @@ class ContentTranslator:
             {
                 "title": english_title,
                 "category": "Investment",  # Translate category
-                "tags": self._translate_tags(korean_metadata.get("tags", [])),
                 "description": self._extract_description(english_content),
                 "language": "en",
                 "translated_from": "ko",
             }
         )
 
-        # Create frontmatter post
-        post = frontmatter.Post(english_content)
-        post.metadata = english_metadata
-
         # Ensure output directory exists
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
 
-        # Write the English markdown file
+        # Write the English markdown file with YAML frontmatter
         with open(output_file, "w", encoding="utf-8") as f:
-            f.write(frontmatter.dumps(post))
+            f.write("---\n")
+            f.write(
+                yaml.dump(
+                    english_metadata, allow_unicode=True, default_flow_style=False
+                )
+            )
+            f.write("---\n\n")
+            f.write(english_content)
 
         print(f"✅ English content generated: {output_path}")
-
-    def _translate_tags(self, korean_tags: list) -> list:
-        """Translate Korean tags to English"""
-        tag_mapping = {
-            "투자": "investment",
-            "경제": "economy",
-            "금융": "finance",
-            "주식": "stocks",
-            "부동산": "real-estate",
-            "채권": "bonds",
-            "금리": "interest-rates",
-            "인플레이션": "inflation",
-            "시장분석": "market-analysis",
-            "리스크": "risk",
-            "포트폴리오": "portfolio",
-        }
-
-        english_tags = []
-        for tag in korean_tags:
-            english_tag = tag_mapping.get(tag, tag.lower())
-            english_tags.append(english_tag)
-
-        return english_tags
 
     def _extract_description(self, content: str) -> str:
         """Extract a brief description from English content"""
