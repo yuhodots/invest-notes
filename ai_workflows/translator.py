@@ -10,20 +10,14 @@ import os
 import sys
 from pathlib import Path
 from typing import Optional
-
 import yaml
-from openai import OpenAI
 
 from prompts.translator_system_prompt import TRANSLATOR_SYSTEM_PROMPT
 from prompts.translator_prompt_template import TRNASLATOR_PROMPT_TEMPLATE
+from util import request_openai_api
 
 
 class ContentTranslator:
-    def __init__(self, api_key: Optional[str] = None):
-        """Initialize the translator with OpenAI client"""
-        self.client = OpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
-        if not self.client.api_key:
-            raise ValueError("OpenAI API key is required")
 
     def load_markdown_post(self, file_path: str) -> tuple[dict, str]:
         """Load markdown file with frontmatter"""
@@ -43,22 +37,13 @@ class ContentTranslator:
     def translate_content(self, korean_content: str, title: str) -> str:
         """Translate Korean content to English using OpenAI API"""
         try:
-            response = self.client.chat.completions.create(
+            return request_openai_api(
+                prompt=TRNASLATOR_PROMPT_TEMPLATE.format(
+                    title=title, content=korean_content
+                ),
+                system_prompt=TRANSLATOR_SYSTEM_PROMPT,
                 model="gpt-5",
-                messages=[
-                    {"role": "system", "content": TRANSLATOR_SYSTEM_PROMPT},
-                    {
-                        "role": "user",
-                        "content": TRNASLATOR_PROMPT_TEMPLATE.format(
-                            title=title, content=korean_content
-                        ),
-                    },
-                ],
-                temperature=0.3,  # Lower temperature for more consistent translation
-                max_tokens=15000,
             )
-
-            return response.choices[0].message.content.strip()
 
         except Exception as e:
             raise RuntimeError(f"Failed to translate content: {str(e)}")
@@ -66,23 +51,11 @@ class ContentTranslator:
     def translate_title(self, korean_title: str) -> str:
         """Translate Korean title to English"""
         try:
-            response = self.client.chat.completions.create(
+            return request_openai_api(
+                prompt=f"Translate this Korean investment blog title to English: '{korean_title}'",
+                system_prompt="You are a professional translator specializing in financial and investment content. Translate the given Korean blog post title to natural, engaging English suitable for investment blogs.",
                 model="gpt-5",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a professional translator specializing in financial and investment content. Translate the given Korean blog post title to natural, engaging English suitable for investment blogs.",
-                    },
-                    {
-                        "role": "user",
-                        "content": f"Translate this Korean investment blog title to English: '{korean_title}'",
-                    },
-                ],
-                temperature=0.3,
-                max_tokens=15000,
             )
-
-            return response.choices[0].message.content.strip().strip("\"'")
 
         except Exception as e:
             print(f"Warning: Failed to translate title, using original: {str(e)}")
@@ -102,10 +75,8 @@ class ContentTranslator:
         english_metadata.update(
             {
                 "title": english_title,
-                "category": "Investment",  # Translate category
+                "category": korean_metadata.get("category", "Economics"),
                 "description": self._extract_description(english_content),
-                "language": "en",
-                "translated_from": "ko",
             }
         )
 
@@ -133,7 +104,7 @@ class ContentTranslator:
             line = line.strip()
             if line and not line.startswith("#") and len(line) > 50:
                 # Take first meaningful paragraph, limit to 150 chars
-                return (line[:150] + "...") if len(line) > 150 else line
+                return (line[:300] + "...") if len(line) > 300 else line
 
         return "Professional analysis and insights on investment and economics."
 
