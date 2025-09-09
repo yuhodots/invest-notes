@@ -8,7 +8,7 @@
       "program": "${workspaceFolder}/ai_workflows/writer.py",
       "args": [
         "--title",
-        "금리 인하 시 주식 주가에 대한 영향",
+        "금리 인하시 주식 주가에 대한 영향",
         "--body",
         "상세한 분석이 필요합니다",
       ],
@@ -24,9 +24,9 @@
       "program": "${workspaceFolder}/ai_workflows/translator.py",
         "args": [
             "--input",
-            "contents/kor/2024-01-01-interest-rate-effect.md",
+            "contents/kor/Economy/2025-09-09-금리 인하시 주식 주가에 대한 영향.md",
             "--output",
-            "contents/eng/2024-01-01-interest-rate-effect.md"
+            "contents/eng/Economy/2025-09-09-금리 인하시 주식 주가에 대한 영향.md"
         ],
       "justMyCode": false,
       "cwd": "${workspaceFolder}",

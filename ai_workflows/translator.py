@@ -9,7 +9,6 @@ import argparse
 import os
 import sys
 from pathlib import Path
-from typing import Optional
 import yaml
 
 from prompts.translator_system_prompt import TRANSLATOR_SYSTEM_PROMPT
