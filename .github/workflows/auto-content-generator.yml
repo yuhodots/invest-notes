@@ -33,9 +33,14 @@ jobs:
     - name: Extract issue information
       id: issue-info
       run: |
+        # Single line variables
         echo "ISSUE_TITLE=${{ github.event.issue.title }}" >> $GITHUB_ENV
-        echo "ISSUE_BODY=${{ github.event.issue.body }}" >> $GITHUB_ENV
         echo "ISSUE_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
+        
+        # Multi-line variable for body
+        echo "ISSUE_BODY<<EOF" >> $GITHUB_ENV
+        echo "${{ github.event.issue.body }}" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
 
         # Create slug from issue title
         SLUG=$(echo "${{ github.event.issue.title }}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9가-힣]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')
