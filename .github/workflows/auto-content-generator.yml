@@ -78,10 +78,19 @@ jobs:
 
         echo "Translating: $KOREAN_FILE -> $ENGLISH_FILE"
         
+        # Check if the file exists
+        if [ -f "$KOREAN_FILE" ]; then
+          echo "File exists at: $KOREAN_FILE"
+        else
+          echo "File not found at: $KOREAN_FILE"
+          ls -la contents/kor/*/
+        fi
+        
+        # Run translator with absolute paths
         cd ai_workflows
         uv run python translator.py \
-          --input "../$KOREAN_FILE" \
-          --output "../$ENGLISH_FILE"
+          --input "$KOREAN_FILE" \
+          --output "$ENGLISH_FILE"
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
