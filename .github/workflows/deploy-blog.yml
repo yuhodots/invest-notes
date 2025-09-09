@@ -9,17 +9,9 @@ on:
       - 'src/**'
       - 'package.json'
       - 'yarn.lock'
-  pull_request:
-    types: [closed]
-    branches:
-      - develop
 
 jobs:
   deploy:
-    # PR이 머지되었거나 직접 push된 경우에만 실행
-    if: |
-      github.event_name == 'push' || 
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     
     steps:
@@ -28,47 +20,23 @@ jobs:
       with:
         fetch-depth: 0  # Full history for proper git operations
     
-    - name: Check if contents folder changed
-      id: contents-changed
-      run: |
-        if [ "${{ github.event_name }}" == "pull_request" ]; then
-          # PR 머지의 경우
-          CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -E '^contents/' || echo "")
-        else
-          # 직접 push의 경우
-          CHANGED=$(git diff --name-only HEAD~1 HEAD | grep -E '^contents/' || echo "")
-        fi
-        
-        if [ -n "$CHANGED" ]; then
-          echo "Contents folder has changes"
-          echo "has_changes=true" >> $GITHUB_OUTPUT
-        else
-          echo "No changes in contents folder"
-          echo "has_changes=false" >> $GITHUB_OUTPUT
-        fi
     
     - name: Setup Node.js
-      if: steps.contents-changed.outputs.has_changes == 'true'
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'yarn'
     
     - name: Install dependencies
-      if: steps.contents-changed.outputs.has_changes == 'true'
       run: yarn install --frozen-lockfile
     
     - name: Deploy blog
-      if: steps.contents-changed.outputs.has_changes == 'true'
       run: yarn deploy
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Comment on PR (if from PR)
-      if: |
-        github.event_name == 'pull_request' && 
-        github.event.pull_request.merged == true &&
-        steps.contents-changed.outputs.has_changes == 'true'
+      if: github.ref == 'refs/heads/develop' && github.event.before != '0000000000000000000000000000000000000000'
       uses: actions/github-script@v6
       with:
         script: |
@@ -89,7 +57,6 @@ jobs:
           })
     
     - name: Notify deployment status
-      if: steps.contents-changed.outputs.has_changes == 'true'
       run: |
         echo "✅ Deployment completed successfully!"
         echo "📦 Built files are in the 'public' directory"
