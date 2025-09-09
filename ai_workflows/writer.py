@@ -65,11 +65,9 @@ def create_markdown_post(
         f.write("---\n\n")
         f.write(content)
 
-    # Get absolute path for consistency
-    absolute_path = str(output_file.absolute())
-    print(f"✅ Korean content generated: {absolute_path}")
-    # Return the absolute path for use in the main function
-    return absolute_path
+    print(f"✅ Korean content generated: {output_path}")
+    # Return the relative path for use in the main function
+    return output_path
 
 
 def _extract_description(content: str) -> str:
