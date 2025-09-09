@@ -14,7 +14,7 @@
       ],
       "justMyCode": false,
       "cwd": "${workspaceFolder}",
-      "python": "${workspaceFolder}/ai_workflows/.venv/bin/python",
+      "python": "${workspaceFolder}/.venv/bin/python",
       "console": "internalConsole"
     },
     {
@@ -30,7 +30,7 @@
         ],
       "justMyCode": false,
       "cwd": "${workspaceFolder}",
-      "python": "${workspaceFolder}/ai_workflows/.venv/bin/python",
+      "python": "${workspaceFolder}/.venv/bin/python",
       "console": "internalConsole"
     }
   ]

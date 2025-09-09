@@ -28,9 +28,7 @@ jobs:
         version: "latest"
 
     - name: Install dependencies
-      run: |
-        cd ai_workflows
-        uv sync --locked
+      run: uv sync --locked
 
     - name: Extract issue information
       id: issue-info
@@ -54,29 +52,20 @@ jobs:
         export LANG=C.UTF-8
         export LC_ALL=C.UTF-8
         
-        # Save current directory
-        ROOT_DIR=$(pwd)
-        
-        cd ai_workflows
-        
         # Run writer.py and capture the last line (file path)
-        GENERATED_FILE=$(uv run python writer.py \
+        GENERATED_FILE=$(uv run python ai_workflows/writer.py \
           --title "${{ env.ISSUE_TITLE }}" \
           --body "${{ env.ISSUE_BODY }}" | tail -1)
-        
-        cd "$ROOT_DIR"
         
         echo "Generated file: $GENERATED_FILE"
         
         # Verify file exists
         if [ -f "$GENERATED_FILE" ]; then
           echo "File successfully created at: $GENERATED_FILE"
-          # Store full path from root
           echo "KOREAN_FILE=$GENERATED_FILE" >> $GITHUB_OUTPUT
         else
-          echo "Error: File not found at expected path: $GENERATED_FILE"
-          echo "Looking for files..."
-          find contents/kor -name "*.md" -type f -mmin -5
+          echo "Error: File not found at: $GENERATED_FILE"
+          ls -la contents/kor/*/
           exit 1
         fi
       env:
@@ -105,11 +94,10 @@ jobs:
           exit 1
         fi
         
-        # Run translator from ai_workflows directory
-        cd ai_workflows
-        uv run python translator.py \
-          --input "$ROOT_DIR/$KOREAN_FILE" \
-          --output "$ROOT_DIR/$ENGLISH_FILE"
+        # Run translator from root directory
+        uv run python ai_workflows/translator.py \
+          --input "$KOREAN_FILE" \
+          --output "$ENGLISH_FILE"
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
