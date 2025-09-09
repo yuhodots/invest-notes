@@ -24,6 +24,9 @@ jobs:
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        
+        # Set up authentication for gh-pages
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -36,8 +39,6 @@ jobs:
     
     - name: Deploy blog
       run: yarn deploy
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Comment on PR (if from PR)
       if: github.ref == 'refs/heads/develop' && github.event.before != '0000000000000000000000000000000000000000'
