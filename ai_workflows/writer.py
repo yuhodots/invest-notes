@@ -66,8 +66,8 @@ def create_markdown_post(
         f.write(content)
 
     print(f"✅ Korean content generated: {output_path}")
-    # Output path for GitHub Actions to capture
-    print(output_path)
+    # Return the path for use in the main function
+    return output_path
 
 
 def _extract_description(content: str) -> str:
@@ -101,12 +101,14 @@ def main():
         )
 
         # Create markdown file
-        create_markdown_post(
+        output_path = create_markdown_post(
             title=args.title,
             content=content,
         )
 
         print("✨ Content generation completed successfully!")
+        # Output path as the last line for GitHub Actions to capture
+        print(output_path)
 
     except Exception as e:
         print(f"❌ Error: {str(e)}", file=sys.stderr)
