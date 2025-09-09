@@ -2,7 +2,7 @@ name: Auto Content Generator
 
 on:
   issues:
-    types: [opened]
+    types: [opened, labeled]
 
 jobs:
   generate-content:
@@ -36,7 +36,7 @@ jobs:
         # Single line variables
         echo "ISSUE_TITLE=${{ github.event.issue.title }}" >> $GITHUB_ENV
         echo "ISSUE_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
-        
+
         # Multi-line variable for body
         echo "ISSUE_BODY<<EOF" >> $GITHUB_ENV
         echo "${{ github.event.issue.body }}" >> $GITHUB_ENV
@@ -56,14 +56,14 @@ jobs:
         # Set UTF-8 encoding for proper Korean handling
         export LANG=C.UTF-8
         export LC_ALL=C.UTF-8
-        
+
         # Run writer.py and capture the last line (file path)
         GENERATED_FILE=$(uv run python ai_workflows/writer.py \
           --title "${{ env.ISSUE_TITLE }}" \
           --body "${{ env.ISSUE_BODY }}" | tail -1)
-        
+
         echo "Generated file: $GENERATED_FILE"
-        
+
         # Verify file exists
         if [ -f "$GENERATED_FILE" ]; then
           echo "File successfully created at: $GENERATED_FILE"
@@ -81,24 +81,24 @@ jobs:
         # Set UTF-8 encoding for proper Korean handling
         export LANG=C.UTF-8
         export LC_ALL=C.UTF-8
-        
+
         # Save current directory
         ROOT_DIR=$(pwd)
-        
+
         # Use the actual generated file path from previous step
         KOREAN_FILE="${{ steps.generate-korean.outputs.KOREAN_FILE }}"
-        
+
         # Create English file path with same category structure
         ENGLISH_FILE=$(echo "$KOREAN_FILE" | sed 's|/kor/|/eng/|')
 
         echo "Translating: $KOREAN_FILE -> $ENGLISH_FILE"
-        
+
         # Verify Korean file exists
         if [ ! -f "$KOREAN_FILE" ]; then
           echo "Error: Korean file not found at: $KOREAN_FILE"
           exit 1
         fi
-        
+
         # Run translator from root directory
         uv run python ai_workflows/translator.py \
           --input "$KOREAN_FILE" \
@@ -117,14 +117,14 @@ jobs:
           - Generated English content: ${{ env.DATE }}-${{ env.SLUG }}.md
 
           Based on issue: ${{ env.ISSUE_TITLE }}
-          
+
           Closes #${{ env.ISSUE_NUMBER }}
         title: "Auto-generated content: ${{ env.ISSUE_TITLE }}"
         body: |
           ## 자동 생성된 컨텐츠
 
           이 PR은 이슈 #${{ env.ISSUE_NUMBER }}에 대한 응답으로 AI가 자동 생성한 컨텐츠입니다.
-          
+
           Closes #${{ env.ISSUE_NUMBER }}
 
           ### 생성된 파일들:
@@ -179,4 +179,4 @@ jobs:
             repo: context.repo.repo,
             labels: ['auto-processed', 'completed']
           })
-    
+
