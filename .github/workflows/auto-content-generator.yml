@@ -49,39 +49,32 @@ jobs:
       id: generate-korean
       run: |
         cd ai_workflows
-        uv run python writer.py \
+        
+        # Set UTF-8 encoding for proper Korean handling
+        export LANG=C.UTF-8
+        export LC_ALL=C.UTF-8
+        
+        # Run writer.py and capture the last line (file path)
+        GENERATED_FILE=$(uv run python writer.py \
           --title "${{ env.ISSUE_TITLE }}" \
-          --body "${{ env.ISSUE_BODY }}"
-
-        # Find the generated file and store its path
-        cd ..
-        GENERATED_FILE=$(find contents/kor -name "${{ env.DATE }}-*.md" -type f | head -1)
+          --body "${{ env.ISSUE_BODY }}" | tail -1)
+        
         echo "Generated file: $GENERATED_FILE"
         echo "KOREAN_FILE=$GENERATED_FILE" >> $GITHUB_OUTPUT
-
-        # Extract category from path
-        CATEGORY=$(echo $GENERATED_FILE | cut -d'/' -f3)
-        echo "CATEGORY=$CATEGORY" >> $GITHUB_OUTPUT
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
     - name: Generate English content
       run: |
+        # Set UTF-8 encoding for proper Korean handling
+        export LANG=C.UTF-8
+        export LC_ALL=C.UTF-8
+        
         # Use the actual generated file path from previous step
         KOREAN_FILE="${{ steps.generate-korean.outputs.KOREAN_FILE }}"
-        CATEGORY="${{ steps.generate-korean.outputs.CATEGORY }}"
         
-        # Debug: Check if file exists
-        echo "Korean file path: $KOREAN_FILE"
-        if [ -f "$KOREAN_FILE" ]; then
-          echo "File exists"
-        else
-          echo "File not found!"
-          exit 1
-        fi
-
         # Create English file path with same category structure
-        ENGLISH_FILE=$(echo $KOREAN_FILE | sed 's|/kor/|/eng/|')
+        ENGLISH_FILE=$(echo "$KOREAN_FILE" | sed 's|/kor/|/eng/|')
 
         echo "Translating: $KOREAN_FILE -> $ENGLISH_FILE"
         
@@ -115,7 +108,7 @@ jobs:
 
           ### 생성된 파일들:
           - 📝 한국어: `${{ steps.generate-korean.outputs.KOREAN_FILE }}`
-          - 📝 영어: `${{ steps.generate-korean.outputs.KOREAN_FILE }}` (eng 버전)
+          - 📝 영어: (한국어 파일의 /eng/ 버전)
 
           ### 원본 이슈:
           **제목:** ${{ env.ISSUE_TITLE }}

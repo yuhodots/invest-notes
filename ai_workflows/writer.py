@@ -66,6 +66,8 @@ def create_markdown_post(
         f.write(content)
 
     print(f"✅ Korean content generated: {output_path}")
+    # Output path for GitHub Actions to capture
+    print(output_path)
 
 
 def _extract_description(content: str) -> str:
