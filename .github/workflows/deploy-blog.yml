@@ -40,26 +40,6 @@ jobs:
     - name: Deploy blog
       run: yarn deploy
     
-    - name: Comment on PR (if from PR)
-      if: github.ref == 'refs/heads/develop' && github.event.before != '0000000000000000000000000000000000000000'
-      uses: actions/github-script@v6
-      with:
-        script: |
-          github.rest.issues.createComment({
-            issue_number: context.payload.pull_request.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: `🚀 **배포 완료!**
-            
-            블로그가 성공적으로 배포되었습니다.
-            
-            📌 **배포 정보:**
-            - 브랜치: \`develop\`
-            - 커밋: \`${{ github.sha }}\`
-            - 배포 시간: \`${new Date().toISOString()}\`
-            
-            🔗 [블로그 확인하기](https://yuhodots.github.io/invest-notes/)`
-          })
     
     - name: Notify deployment status
       run: |
